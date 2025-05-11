@@ -70,7 +70,8 @@ void Logger::setOutputToConsole(bool enable) {
 
 void Logger::setOutputToFile(const std::string& filename) {
     std::lock_guard<std::mutex> lock(mutex_);
-    fileOutput_ = std::make_unique<std::ofstream>(filename, std::ios::app);
+    fileOutput_ = std::make_unique<std::ofstream>(filename, std::ios::app); // make_unique 是 C++14 的特性
+    // fileOutput_.reset(new std::ofstream(filename, std::ios::app));
     if (!fileOutput_->good()) {
         fileOutput_.reset();
         throw std::runtime_error("Failed to open log file");
