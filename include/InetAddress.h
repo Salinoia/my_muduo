@@ -8,7 +8,7 @@
 // 封装IPv4地址结构，方便操作IP和端口
 class InetAddress {
 public:
-    // 通过字符串IP和数字端口构造，默认127.0.0.1:0
+    // 通过字符串IP和数字端口构造，默认 127.0.0.1:0
     explicit InetAddress(std::string ip = "127.0.0.1", uint16_t port = 0);
 
     // 直接通过sockaddr_in结构体构造

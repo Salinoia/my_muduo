@@ -55,7 +55,7 @@ TimeStamp EPollPoller::poll(int timeoutMs, ChannelList* activeChannels) {
 // ```
 void EPollPoller::updateChannel(Channel* channel) {
     const int index = channel->getIndex();
-    LOG_INFO("func=%s => fd=%d events=%d index=%d\n", __FUNCTION__, channel->getFd(), channel->getEvents(), index);
+    LOG_INFO("func = %s => fd = %d events = %d index = %d\n", __FUNCTION__, channel->getFd(), channel->getEvents(), index);
 
     if (index == kNew || index == kDeleted) {  // channel还未在Poller中注册
         if (index == kNew) {
@@ -81,7 +81,7 @@ void EPollPoller::removeChannel(Channel* channel) {
     int fd = channel->getFd();
     channels_.erase(fd);
 
-    LOG_INFO("func=%s => fd=%d", __FUNCTION__, fd);
+    LOG_INFO("func = %s => fd = %d", __FUNCTION__, fd);
     int index = channel->getIndex();
     if (index == kAdded) {
         update(EPOLL_CTL_DEL, channel);

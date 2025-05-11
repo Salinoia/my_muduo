@@ -1,5 +1,7 @@
 #include "Logger.h"
 
+#include <libgen.h>
+
 #include <cstdarg>
 #include <ctime>
 #include <iomanip>
@@ -8,7 +10,12 @@
 #include <sstream>
 namespace {
 thread_local Logger* tlsLogger = nullptr;  // 每个线程缓存自己的实例
+
+const char* levelToString(LogLevel level) {
+    static const char* strings[] = {"TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"};
+    return strings[level];
 }
+}  // namespace
 Logger& Logger::instance() {
     if (tlsLogger == nullptr) {
         static Logger gloLogger;  // 全局唯一单例
@@ -33,6 +40,15 @@ void Logger::log(LogLevel level, const std::string& msg) {
     std::ostringstream oss;
     oss << std::put_time(&tm, "%Y-%m-%d %H:%M:%S") << " [0x" << std::hex << std::this_thread::get_id() << "] " << "[";
     switch (level) {
+    case TRACE:
+        oss << "TRACE";
+        break;
+    case DEBUG:
+        oss << "DEBUG";
+        break;
+    case WARN:
+        oss << "WARN";
+        break;
     case INFO:
         oss << "INFO";
         break;
@@ -41,9 +57,6 @@ void Logger::log(LogLevel level, const std::string& msg) {
         break;
     case FATAL:
         oss << "FATAL";
-        break;
-    case DEBUG:
-        oss << "DEBUG";
         break;
     }
     oss << "] " << msg << std::endl;
@@ -70,7 +83,7 @@ void Logger::setOutputToConsole(bool enable) {
 
 void Logger::setOutputToFile(const std::string& filename) {
     std::lock_guard<std::mutex> lock(mutex_);
-    fileOutput_ = std::make_unique<std::ofstream>(filename, std::ios::app); // make_unique 是 C++14 的特性
+    fileOutput_ = std::make_unique<std::ofstream>(filename, std::ios::app);  // make_unique 是 C++14 的特性
     // fileOutput_.reset(new std::ofstream(filename, std::ios::app));
     if (!fileOutput_->good()) {
         fileOutput_.reset();
@@ -89,12 +102,10 @@ Logger::~Logger() {
 }
 // 安全的格式化函数（替代 snprintf）
 std::string formatLog(const char* fmt, ...) {
+    char buf[1024];
     va_list args;
     va_start(args, fmt);
-
-    char buf[1024];
-    vsnprintf(buf, sizeof(buf), fmt, args);  // 自动截断防止溢出
-
+    vsnprintf(buf, sizeof(buf), fmt, args);
     va_end(args);
     return buf;
 }

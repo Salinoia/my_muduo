@@ -28,7 +28,7 @@ TcpConnection::TcpConnection(EventLoop* loop, const std::string& nameArg, int so
     channel_->setWriteCallback([this]() { this->handleWrite(); });
     channel_->setCloseCallback([this]() { this->handleClose(); });
     channel_->setErrorCallback([this]() { this->handleError(); });
-    LOG_INFO("TcpConnection::ctor[%s] at fd = %d\n", name_.c_str(), sockfd);
+    LOG_TRACE("TcpConnection::ctor[%s] at fd = %d\n", name_.c_str(), sockfd);
     socket_->setKeepAlive(true);
 }
 
