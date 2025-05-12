@@ -2,7 +2,7 @@
 
 ## 项目概述
 
-本项目是基于陈硕的 muduo 网络库实现的一个简化版 Reactor 模式网络库，采用 C++11 编写。实现了高性能的多线程 TCP 网络服务器核心框架，支持多 Reactor 模型和事件驱动编程。
+本项目是基于陈硕的 muduo 网络库实现的一个简化版 Reactor 模式网络库，采用 C++14 编写。实现了高性能的多线程 TCP 网络服务器核心框架，支持多 Reactor 模型和事件驱动编程。
 
 ## 项目结构
 
@@ -34,8 +34,6 @@
 ├── example/                # 示例代码
 │   ├── EchoServer.cpp      # 回显服务器示例
 │   └── CMakeLists.txt
-├── lib/                    # 生成的库文件
-│   └── libmuduo_core.so    # 核心库
 └── CMakeLists.txt          # 项目构建文件
 ```
 
@@ -67,7 +65,7 @@
 
 - Linux 系统
 - CMake (>= 3.10)
-- g++ (支持 C++11)
+- g++ (支持 C++14)
 
 ### 构建步骤
 
@@ -82,7 +80,7 @@ make
 构建完成后，可以在 `example/` 目录下找到示例程序：
 
 ```bash
-./example/EchoServer
+./example/echo
 ```
 
 ## 示例代码
