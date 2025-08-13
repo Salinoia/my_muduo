@@ -46,6 +46,7 @@ private:
 };
 
 int main() {
+    Logger::instance().setLogLevel(WARN);
     EventLoop loop;
     InetAddress addr("127.0.0.1", 8000);
     auto server = EchoServer::create(&loop, addr, "EchoServer");
