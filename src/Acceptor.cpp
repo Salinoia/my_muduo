@@ -52,7 +52,7 @@ void Acceptor::handleRead() {
         }
     } else {
         LOG_ERROR("%s:%s:%d accept err:%d\n", __FILE__, __FUNCTION__, __LINE__, errno);
-        if (errno = EMFILE) {
+        if (errno == EMFILE) {
             LOG_ERROR("%s:%s:%d sockfd reached limit\n", __FILE__, __FUNCTION__, __LINE__);
         }
     }
