@@ -9,17 +9,16 @@
 #include "NonCopyable.h"
 #include "TimeStamp.h"
 
-class KcpSession;
+class QuicSession;
 
-// Basic KCP server built on UDP and EventLoop
-class KcpServer : NonCopyable {
+// Simplified QUIC server built on UDP; acts as placeholder for real QUIC
+class QuicServer : NonCopyable {
 public:
-    using SessionPtr = std::shared_ptr<KcpSession>;
+    using SessionPtr = std::shared_ptr<QuicSession>;
 
-    KcpServer(EventLoop* loop, const InetAddress& listenAddr);
-    ~KcpServer();
+    QuicServer(EventLoop* loop, const InetAddress& listenAddr);
+    ~QuicServer();
 
-    // Start receiving datagrams
     void start();
 
 private:
