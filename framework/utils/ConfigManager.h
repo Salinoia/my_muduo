@@ -1,13 +1,15 @@
 #pragma once
 #include <string>
-#include <unordered_map>
 #include <mutex>
 #include <thread>
 #include <filesystem>
+#include <nlohmann/json.hpp>
+#include <yaml-cpp/yaml.h>
 
-// Simple configuration manager supporting JSON and YAML (flat key-value).
-// It loads configuration files and provides typed getters. It can optionally
-// watch for file changes and reload automatically.
+// Configuration manager supporting hierarchical JSON/YAML files. The loaded
+// configuration is stored as a JSON object which allows easy mapping to
+// strongly typed structures. It can optionally watch files for changes and
+// reload automatically.
 class ConfigManager {
 public:
     static ConfigManager& Instance();
@@ -24,6 +26,14 @@ public:
     double GetDouble(const std::string& key, double defaultValue = 0.0) const;
     bool GetBool(const std::string& key, bool defaultValue = false) const;
 
+    template <typename T>
+    static T LoadTyped(const std::string& filename) {
+        ConfigManager mgr;
+        if (!mgr.Load(filename)) return T{};
+        std::lock_guard<std::mutex> lock(mgr.mutex_);
+        return mgr.root_.get<T>();
+    }
+
     ~ConfigManager();
 
 private:
@@ -36,7 +46,7 @@ private:
     void WatchLoop(int intervalMs);
 
     mutable std::mutex mutex_;
-    std::unordered_map<std::string, std::string> data_;
+    nlohmann::json root_;
     std::string filename_;
     std::filesystem::file_time_type lastWriteTime_{};
 

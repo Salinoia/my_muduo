@@ -9,6 +9,8 @@ void HttpRequest::swap(HttpRequest& that) {
     path_.swap(that.path_);
     query_.swap(that.query_);
     headers_.swap(that.headers_);
+    body_.swap(that.body_);
+    json_.swap(that.json_);
 }
 
 bool HttpRequest::setMethod(const char* start, const char* end) {
@@ -61,4 +63,13 @@ std::string HttpRequest::getHeader(const std::string& field) const {
     if (it != headers_.end())
         return it->second;
     return "";
+}
+
+void HttpRequest::setBody(const std::string& body) {
+    body_ = body;
+    json_ = nlohmann::json();
+    std::string contentType = getHeader("Content-Type");
+    if (contentType.find("application/json") != std::string::npos) {
+        json_ = nlohmann::json::parse(body_, nullptr, false);
+    }
 }

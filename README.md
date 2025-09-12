@@ -37,6 +37,32 @@
 └── CMakeLists.txt          # 项目构建文件
 ```
 
+## 模块化约定
+
+- `framework/controller/BaseController.h` 提供路由注册与依赖注入接口。
+- 各业务模块位于 `services/<module>` 目录，包含 `Repository`、`Service` 和 `Controller` 三层。
+- 控制器继承 `BaseController` 并在 `registerRoutes` 中通过 `Router` 暴露 REST 风格接口。
+
+### 示例目录结构
+
+```
+services/
+  user/
+    UserRepository.h
+    UserService.h
+    UserController.h
+  post/
+    PostRepository.h
+    PostService.h
+    PostController.h
+  comment/
+    CommentRepository.h
+    CommentService.h
+    CommentController.h
+```
+
+参见 `examples/WebServer.cpp` 了解如何组装各模块并启动 HTTP 服务。
+
 ## 核心特性
 
 1. **多 Reactor 模型**：

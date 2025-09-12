@@ -2,6 +2,7 @@
 
 #include <map>
 #include <string>
+#include <nlohmann/json.hpp>
 
 class Buffer;
 
@@ -11,6 +12,8 @@ public:
         kUnknown,
         k200Ok = 200,
         k301MovedPermanently = 301,
+        k401Unauthorized = 401,
+        k403Forbidden = 403,
         k400BadRequest = 400,
         k404NotFound = 404,
     };
@@ -19,6 +22,7 @@ public:
 
     void setStatusCode(HttpStatusCode code) { statusCode_ = code; }
     void setStatusMessage(const std::string& message) { statusMessage_ = message; }
+    HttpStatusCode statusCode() const { return statusCode_; }
 
     void setCloseConnection(bool on) { closeConnection_ = on; }
     bool closeConnection() const { return closeConnection_; }
@@ -27,6 +31,7 @@ public:
     void addHeader(const std::string& key, const std::string& value) { headers_[key] = value; }
 
     void setBody(const std::string& body) { body_ = body; }
+    void setJson(const nlohmann::json& j);
 
     void appendToBuffer(Buffer* output) const;
 

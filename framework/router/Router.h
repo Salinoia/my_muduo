@@ -2,6 +2,7 @@
 
 #include <functional>
 #include <memory>
+#include <regex>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -45,8 +46,12 @@ class Router {
 public:
     using Handler = std::function<void(HttpRequest&, HttpResponse&)>;
 
-    void addRoute(const std::string& path, const Handler& handler) {
-        routes_[path] = handler;
+    void addRoute(const std::string& method, const std::string& path, const Handler& handler) {
+        Route r;
+        r.method = method;
+        r.pattern = std::regex(pathToRegex(path));
+        r.handler = handler;
+        routes_.push_back(std::move(r));
     }
 
     void addInterceptor(const std::shared_ptr<Interceptor>& interceptor) {
@@ -54,21 +59,47 @@ public:
     }
 
     void handle(HttpRequest& req, HttpResponse& res) {
-        auto it = routes_.find(req.path());
-        Handler handler;
-        if (it != routes_.end()) {
-            handler = it->second;
-        } else {
-            handler = [](HttpRequest& /*unused*/, HttpResponse& response) {
-                response.setStatusCode(HttpResponse::k404NotFound);
-                response.setStatusMessage("Not Found");
-            };
+        Handler handler = [](HttpRequest& /*unused*/, HttpResponse& response) {
+            response.setStatusCode(HttpResponse::k404NotFound);
+            response.setStatusMessage("Not Found");
+        };
+        for (const auto& route : routes_) {
+            if (route.method == req.method() && std::regex_match(req.path(), route.pattern)) {
+                handler = route.handler;
+                break;
+            }
         }
         chain_.handle(req, res, handler);
     }
 
 private:
-    std::unordered_map<std::string, Handler> routes_;
+    struct Route {
+        std::string method;
+        std::regex pattern;
+        Handler handler;
+    };
+
+    static std::string pathToRegex(const std::string& path) {
+        std::string regexStr = "^";
+        const std::string special = ".^$|()[]{}*+?\\";
+        for (size_t i = 0; i < path.size(); ++i) {
+            char c = path[i];
+            if (c == ':') {
+                regexStr += "([^/]+)";
+                while (i + 1 < path.size() && path[i + 1] != '/') {
+                    ++i;
+                }
+            } else {
+                if (special.find(c) != std::string::npos)
+                    regexStr += '\\';
+                regexStr += c;
+            }
+        }
+        regexStr += '$';
+        return regexStr;
+    }
+
+    std::vector<Route> routes_;
     InterceptorChain chain_;
 };
 

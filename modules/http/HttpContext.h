@@ -14,7 +14,7 @@ public:
         kGotAll,
     };
 
-    HttpContext() : state_(kExpectRequestLine) {}
+    HttpContext() : state_(kExpectRequestLine), contentLength_(0) {}
 
     bool parseRequest(Buffer* buf, TimeStamp receiveTime);
 
@@ -29,4 +29,5 @@ private:
 
     HttpRequestParseState state_;
     HttpRequest request_;
+    size_t contentLength_;
 };

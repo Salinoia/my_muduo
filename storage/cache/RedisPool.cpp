@@ -1,13 +1,27 @@
 #include "RedisPool.h"
+#include "ConfigManager.h"
 
 #include <iostream>
+#include <mutex>
 
-RedisPool::RedisPool(const std::string& host, int port, size_t pool_size,
-                     const std::string& password, int timeout_ms)
-    : host_(host), port_(port), password_(password) {
-    timeout_.tv_sec = timeout_ms / 1000;
-    timeout_.tv_usec = (timeout_ms % 1000) * 1000;
-    for (size_t i = 0; i < pool_size; ++i) {
+RedisPool& RedisPool::Instance() {
+    static RedisPool instance;
+    static std::once_flag flag;
+    std::call_once(flag, [&]() {
+        RedisConfig cfg = ConfigManager::LoadTyped<RedisConfig>("config/redis.yaml");
+        instance.Init(cfg);
+    });
+    return instance;
+}
+
+void RedisPool::Init(const RedisConfig& config) {
+    if (initialized_) return;
+    host_ = config.host;
+    port_ = config.port;
+    password_ = config.password;
+    timeout_.tv_sec = config.timeout_ms / 1000;
+    timeout_.tv_usec = (config.timeout_ms % 1000) * 1000;
+    for (size_t i = 0; i < config.poolSize; ++i) {
         auto* client = new RedisClient(host_, port_, password_, timeout_);
         if (client->Connect()) {
             clients_.push(client);
@@ -16,6 +30,7 @@ RedisPool::RedisPool(const std::string& host, int port, size_t pool_size,
             std::cerr << "Failed to create redis connection" << std::endl;
         }
     }
+    initialized_ = true;
 }
 
 RedisPool::~RedisPool() {
