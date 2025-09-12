@@ -39,3 +39,7 @@ target_include_directories(router_route_test PRIVATE ${CMAKE_SOURCE_DIR}/framewo
 target_link_libraries(router_route_test muduo_http)
 
 
+add_executable(http_json_test HttpJsonTest.cpp)
+target_include_directories(http_json_test PRIVATE ${CMAKE_SOURCE_DIR}/modules)
+target_link_libraries(http_json_test muduo_http)
+
