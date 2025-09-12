@@ -10,7 +10,7 @@ void TestSessionLifecycle() {
     Router router;
     auto store = std::make_shared<MemorySessionStore>();
     router.addInterceptor(std::make_shared<SessionInterceptor>(store, 1));
-    router.addRoute("/test", [](HttpRequest& req, HttpResponse& res) {
+    router.addRoute("GET", "/test", [](HttpRequest& req, HttpResponse& res) {
         auto session = req.getSession();
         std::string count = session->get("count");
         if (count.empty())
@@ -24,6 +24,7 @@ void TestSessionLifecycle() {
     HttpRequest req;
     const char* path = "/test";
     req.setPath(path, path + 5);
+    const char* m = "GET"; req.setMethod(m, m+3);
     HttpResponse res(false);
     router.handle(req, res);
     auto sid = req.getSession()->id();
@@ -31,6 +32,7 @@ void TestSessionLifecycle() {
 
     HttpRequest req2;
     req2.setPath(path, path + 5);
+    req2.setMethod(m, m+3);
     req2.setHeader("Cookie", "SESSIONID=" + sid);
     HttpResponse res2(false);
     router.handle(req2, res2);
@@ -40,6 +42,7 @@ void TestSessionLifecycle() {
 
     HttpRequest req3;
     req3.setPath(path, path + 5);
+    req3.setMethod(m, m+3);
     req3.setHeader("Cookie", "SESSIONID=" + sid);
     HttpResponse res3(false);
     router.handle(req3, res3);

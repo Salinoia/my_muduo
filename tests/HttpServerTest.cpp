@@ -6,10 +6,8 @@
 #include "http/HttpContext.h"
 #include "http/HttpResponse.h"
 
-// expose private methods of HttpServer only
-#define private public
+// include server after headers
 #include "http/HttpServer.h"
-#undef private
 #include "http/src/HttpRequest.cpp"
 #include "http/src/HttpResponse.cpp"
 #include "http/src/HttpContext.cpp"
@@ -25,7 +23,9 @@ int main() {
     HttpRequest req1;
     const char* path1 = "/";
     req1.setPath(path1, path1 + 1);
-    server.onRequest(conn1, req1);
+    const char* m = "GET"; req1.setMethod(m, m+3);
+    req1.setVersion(HttpRequest::kHttp10);
+    server.handleRequestForTest(conn1, req1);
     assert(conn1->sent.find("404 Not Found") != std::string::npos);
     assert(conn1->shutdownCalled);
 
@@ -39,7 +39,9 @@ int main() {
     HttpRequest req2;
     const char* path2 = "/hello";
     req2.setPath(path2, path2 + 6);
-    server2.onRequest(conn2, req2);
+    req2.setMethod(m, m+3);
+    req2.setVersion(HttpRequest::kHttp11);
+    server2.handleRequestForTest(conn2, req2);
     assert(conn2->sent.find("200 OK") != std::string::npos);
     assert(!conn2->shutdownCalled);
 

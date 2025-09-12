@@ -21,7 +21,7 @@ static void InitRouter(Router& router, const RouterConfig& cfg) {
     if (cfg.enableRole) {
         router.addInterceptor(std::make_shared<RoleInterceptor>(std::unordered_set<std::string>{"admin"}));
     }
-    router.addRoute("/secure", [](HttpRequest& req, HttpResponse& res) {
+    router.addRoute("GET", "/secure", [](HttpRequest& req, HttpResponse& res) {
         res.setStatusCode(HttpResponse::k200Ok);
     });
 }
@@ -30,6 +30,7 @@ static HttpRequest BuildRequest(const std::vector<std::pair<std::string, std::st
     HttpRequest req;
     const char* path = "/secure";
     req.setPath(path, path + strlen(path));
+    const char* m = "GET"; req.setMethod(m, m+3);
     for (const auto& h : headers) {
         std::string line = h.first + ": " + h.second;
         req.addHeader(line.c_str(), line.c_str() + h.first.size(), line.c_str() + line.size());
