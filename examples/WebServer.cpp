@@ -1,6 +1,6 @@
-#include "../framework/ioc/Container.h"
-#include "../storage/UserRepository.h"
-#include "../services/UserService.h"
+#include "../src/framework/ioc/Container.h"
+#include "../src/storage/UserRepository.h"
+#include "../src/services/UserService.h"
 #include <iostream>
 #include <memory>
 
