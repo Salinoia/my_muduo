@@ -5,3 +5,7 @@ add_executable(router_interceptor_test RouterInterceptorTest.cpp)
 target_include_directories(router_interceptor_test PRIVATE ${CMAKE_SOURCE_DIR}/framework ${CMAKE_SOURCE_DIR}/modules)
 target_link_libraries(router_interceptor_test muduo_http)
 
+add_executable(session_test SessionTest.cpp ../framework/session/Session.cpp)
+target_include_directories(session_test PRIVATE ${CMAKE_SOURCE_DIR}/framework ${CMAKE_SOURCE_DIR}/modules)
+target_link_libraries(session_test muduo_http)
+
