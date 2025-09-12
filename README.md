@@ -40,7 +40,7 @@ ctest --test-dir build
 The sample code under `src/app` showcases how the framework can be combined with supporting components:
 
 - Publish and consume asynchronous messages through the in-memory `RabbitMQClient`.
-- Use `RedisClient` and `RedisPool` for caching and ranking (e.g., via `zset`).
+- Use `RedisClient` and `RedisPool` for caching, counters and leaderboard ranking via `zset`.
 - Access MySQL via the connection pool with a write-then-evict pattern for cache consistency.
 - Maintain per-thread user contexts with the `Session` and `ThreadLocal` utilities.
 - Insert cross-cutting logic (auth, logging) using router interceptors.
