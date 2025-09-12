@@ -1,5 +1,7 @@
 enable_testing()
 
+find_package(yaml-cpp REQUIRED)
+
 add_executable(spsc_test SpscRingBufferTest.cpp)
 target_include_directories(spsc_test PRIVATE ${CMAKE_SOURCE_DIR}/framework/utils)
 add_test(NAME spsc_test COMMAND spsc_test)
@@ -19,7 +21,9 @@ target_link_libraries(router_test muduo_http)
 add_test(NAME router_test COMMAND router_test)
 
 add_executable(config_manager_test ConfigManagerTest.cpp)
-target_include_directories(config_manager_test PRIVATE ${CMAKE_SOURCE_DIR}/framework/utils)
+
+target_include_directories(config_manager_test PRIVATE ${CMAKE_SOURCE_DIR}/framework/utils ${YAML_CPP_INCLUDE_DIR})
+
 target_link_libraries(config_manager_test yaml-cpp)
 add_test(NAME config_manager_test COMMAND config_manager_test)
 
@@ -28,7 +32,9 @@ target_include_directories(auth_role_interceptor_test PRIVATE ${CMAKE_SOURCE_DIR
 target_link_libraries(auth_role_interceptor_test muduo_http)
 
 add_executable(connection_pool_test ConnectionPoolTest.cpp ../framework/utils/ConfigManager.cpp)
-target_include_directories(connection_pool_test PRIVATE ${CMAKE_SOURCE_DIR}/tests/mocks ${CMAKE_SOURCE_DIR}/storage/db/ConnectionPool ${CMAKE_SOURCE_DIR}/framework/utils)
+
+target_include_directories(connection_pool_test PRIVATE ${CMAKE_SOURCE_DIR}/tests/mocks ${CMAKE_SOURCE_DIR}/storage/db/ConnectionPool ${CMAKE_SOURCE_DIR}/framework/utils ${YAML_CPP_INCLUDE_DIR})
+
 target_link_libraries(connection_pool_test yaml-cpp)
 add_test(NAME connection_pool_test COMMAND connection_pool_test)
 
@@ -50,6 +56,6 @@ target_include_directories(session_test PRIVATE ${CMAKE_SOURCE_DIR}/framework ${
 target_link_libraries(session_test muduo_http)
 
 add_executable(config_reload_test ConfigReloadTest.cpp ../framework/utils/ConfigManager.cpp)
-target_include_directories(config_reload_test PRIVATE ${CMAKE_SOURCE_DIR}/framework/utils)
+target_include_directories(config_reload_test PRIVATE ${CMAKE_SOURCE_DIR}/framework/utils ${YAML_CPP_INCLUDE_DIR})
 target_link_libraries(config_reload_test yaml-cpp)
 
