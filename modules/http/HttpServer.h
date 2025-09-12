@@ -7,14 +7,13 @@
 #include "TcpServer.h"
 #include "http/HttpContext.h"
 #include "http/HttpResponse.h"
+#include "router/Router.h"
 
 class HttpServer {
 public:
-    using HttpCallback = std::function<void(HttpRequest&, HttpResponse&)>;
-
     HttpServer(EventLoop* loop, const InetAddress& listenAddr, const std::string& name, TcpServer::Option option = TcpServer::kNoReusePort);
 
-    void setHttpCallback(const HttpCallback& cb) { httpCallback_ = cb; }
+    Router& router() { return router_; }
 
     void setThreadNum(int numThreads) { server_.setThreadNum(numThreads); }
     void start();
@@ -25,6 +24,6 @@ private:
     void onRequest(const TcpConnectionPtr& conn, HttpRequest& req);
 
     TcpServer server_;
-    HttpCallback httpCallback_;
+    Router router_;
     std::unordered_map<TcpConnection*, HttpContext> contexts_;
 };
