@@ -8,12 +8,23 @@
 #include <queue>
 #include <string>
 #include <thread>
+#include <nlohmann/json.hpp>
 
 // A lightweight RabbitMQ client simulation providing basic
 // publishing and consuming capabilities. The implementation does not
 // depend on any external RabbitMQ libraries which keeps the example
 // self contained. The goal is to demonstrate how connection management
 // and producer/consumer helpers could be structured.
+struct RabbitMQConfig {
+    std::string host{"localhost"};
+    int port{5672};
+};
+
+inline void from_json(const nlohmann::json& j, RabbitMQConfig& c) {
+    j.at("host").get_to(c.host);
+    j.at("port").get_to(c.port);
+}
+
 class RabbitMQClient : public std::enable_shared_from_this<RabbitMQClient> {
 public:
     using ErrorCallback = std::function<void(const std::string&)>;
@@ -21,6 +32,8 @@ public:
 
     RabbitMQClient(const std::string& host = "localhost", int port = 5672);
     ~RabbitMQClient() = default;
+
+    static std::shared_ptr<RabbitMQClient> Instance();
 
     // Establish a connection to the server. In this simplified
     // implementation the connection always succeeds.

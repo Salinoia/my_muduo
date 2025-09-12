@@ -1,9 +1,22 @@
 #include "RabbitMQClient.h"
+#include "ConfigManager.h"
 
 #include <chrono>
 #include <iostream>
 
-RabbitMQClient::RabbitMQClient(const std::string& host, int port) : host_(host), port_(port), connected_(false), reconnect_(true) {}
+RabbitMQClient::RabbitMQClient(const std::string& host, int port)
+    : host_(host), port_(port), connected_(false), reconnect_(true) {}
+
+std::shared_ptr<RabbitMQClient> RabbitMQClient::Instance() {
+    static std::shared_ptr<RabbitMQClient> instance;
+    static std::once_flag flag;
+    std::call_once(flag, []() {
+        RabbitMQConfig cfg = ConfigManager::LoadTyped<RabbitMQConfig>("config/mq.json");
+        instance = std::make_shared<RabbitMQClient>(cfg.host, cfg.port);
+        instance->connect();
+    });
+    return instance;
+}
 
 bool RabbitMQClient::connect() {
     // Simulate a successful connection.

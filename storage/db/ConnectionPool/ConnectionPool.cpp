@@ -1,10 +1,17 @@
 #include "ConnectionPool.h"
+#include "ConfigManager.h"
 
 #include <cppconn/driver.h>
 #include <cppconn/exception.h>
+#include <mutex>
 
 ConnectionPool& ConnectionPool::Instance() {
     static ConnectionPool instance;
+    static std::once_flag flag;
+    std::call_once(flag, [&]() {
+        DBConfig cfg = ConfigManager::LoadTyped<DBConfig>("config/db.json");
+        instance.Init(cfg);
+    });
     return instance;
 }
 
