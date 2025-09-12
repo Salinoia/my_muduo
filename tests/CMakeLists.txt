@@ -22,6 +22,11 @@ add_executable(config_manager_test ConfigManagerTest.cpp)
 target_include_directories(config_manager_test PRIVATE ${CMAKE_SOURCE_DIR}/framework/utils)
 add_test(NAME config_manager_test COMMAND config_manager_test)
 
+add_executable(auth_role_interceptor_test AuthRoleInterceptorTest.cpp)
+target_include_directories(auth_role_interceptor_test PRIVATE ${CMAKE_SOURCE_DIR}/framework ${CMAKE_SOURCE_DIR}/modules)
+target_link_libraries(auth_role_interceptor_test muduo_http)
+
 add_executable(connection_pool_test ConnectionPoolTest.cpp)
 target_include_directories(connection_pool_test PRIVATE ${CMAKE_SOURCE_DIR}/tests/mocks ${CMAKE_SOURCE_DIR}/storage/db/ConnectionPool)
 add_test(NAME connection_pool_test COMMAND connection_pool_test)
+
