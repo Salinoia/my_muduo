@@ -1,48 +1,30 @@
-#include "EventLoop.h"
-#include "InetAddress.h"
-#include "http/HttpServer.h"
-#include "router/Router.h"
-#include "user/UserController.h"
-#include "user/UserService.h"
-#include "user/UserRepository.h"
-#include "post/PostController.h"
-#include "post/PostService.h"
-#include "post/PostRepository.h"
-#include "comment/CommentController.h"
-#include "comment/CommentService.h"
-#include "comment/CommentRepository.h"
+#include "../framework/ioc/Container.h"
+#include "../storage/UserRepository.h"
+#include "../services/UserService.h"
+#include <iostream>
+#include <memory>
+
+using namespace ioc;
+
+class UserController {
+public:
+    UserController() : service_(Container::instance().resolve<UserService>()) {}
+    void get(int id) {
+        std::cout << service_->getUser(id) << std::endl;
+    }
+private:
+    std::shared_ptr<UserService> service_;
+};
 
 int main() {
-    EventLoop loop;
-    InetAddress addr("0.0.0.0", 8080);
-    HttpServer server(&loop, addr, "demo");
+    Container::instance().registerType<UserRepository>(Lifetime::Singleton);
+    Container::instance().registerType<UserService>(Lifetime::Singleton);
+    Container::instance().registerType<UserController>(Lifetime::Prototype);
 
-    Router router;
-
-    auto userRepo = std::make_shared<UserRepository>();
-    auto userService = std::make_shared<UserService>(userRepo);
-    UserController userCtl;
-    userCtl.addDependency(userService);
-    userCtl.registerRoutes(router);
-
-    auto postRepo = std::make_shared<PostRepository>();
-    auto postService = std::make_shared<PostService>(postRepo);
-    PostController postCtl;
-    postCtl.addDependency(postService);
-    postCtl.registerRoutes(router);
-
-    auto commentRepo = std::make_shared<CommentRepository>();
-    auto commentService = std::make_shared<CommentService>(commentRepo);
-    CommentController commentCtl;
-    commentCtl.addDependency(commentService);
-    commentCtl.registerRoutes(router);
-
-    server.setHttpCallback([&router](HttpRequest& req, HttpResponse& res) {
-        router.handle(req, res);
-    });
-
-    server.start();
-    loop.loop();
+    auto controller = Container::instance().resolve<UserController>();
+    if (controller) {
+        controller->get(1);
+    }
     return 0;
 }
 
