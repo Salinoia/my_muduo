@@ -59,3 +59,9 @@ add_executable(config_reload_test ConfigReloadTest.cpp ../src/framework/utils/Co
 target_include_directories(config_reload_test PRIVATE ${CMAKE_SOURCE_DIR}/src/framework/utils ${YAML_CPP_INCLUDE_DIR})
 target_link_libraries(config_reload_test yaml-cpp)
 
+# Redis client leaderboard test
+add_executable(redis_client_test RedisClientTest.cpp ../src/storage/cache/RedisClient.cpp)
+target_include_directories(redis_client_test PRIVATE ${CMAKE_SOURCE_DIR}/src/storage/cache)
+target_link_libraries(redis_client_test hiredis)
+add_test(NAME redis_client_test COMMAND redis_client_test)
+

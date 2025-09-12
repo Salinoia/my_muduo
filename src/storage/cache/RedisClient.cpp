@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <strings.h>
+#include <cstdlib>
 
 RedisClient::RedisClient(const std::string& host, int port,
                          const std::string& password,
@@ -92,6 +93,83 @@ bool RedisClient::Del(const std::string& key) {
         return false;
     }
     bool ok = reply->type == REDIS_REPLY_INTEGER && reply->integer > 0;
+    freeReplyObject(reply);
+    return ok;
+}
+
+bool RedisClient::Incr(const std::string& key, long long& value) {
+    if (!EnsureConnected()) return false;
+    redisReply* reply = (redisReply*)redisCommand(context_, "INCR %s", key.c_str());
+    if (!reply) {
+        std::cerr << "Redis INCR command failed" << std::endl;
+        return false;
+    }
+    bool ok = reply->type == REDIS_REPLY_INTEGER;
+    if (ok) value = reply->integer;
+    freeReplyObject(reply);
+    return ok;
+}
+
+bool RedisClient::Expire(const std::string& key, int seconds) {
+    if (!EnsureConnected()) return false;
+    redisReply* reply = (redisReply*)redisCommand(context_, "EXPIRE %s %d", key.c_str(), seconds);
+    if (!reply) {
+        std::cerr << "Redis EXPIRE command failed" << std::endl;
+        return false;
+    }
+    bool ok = reply->type == REDIS_REPLY_INTEGER && reply->integer == 1;
+    freeReplyObject(reply);
+    return ok;
+}
+
+bool RedisClient::ZAdd(const std::string& key, double score, const std::string& member) {
+    if (!EnsureConnected()) return false;
+    redisReply* reply = (redisReply*)redisCommand(context_, "ZADD %s %f %s", key.c_str(), score, member.c_str());
+    if (!reply) {
+        std::cerr << "Redis ZADD command failed" << std::endl;
+        return false;
+    }
+    bool ok = reply->type == REDIS_REPLY_INTEGER;
+    freeReplyObject(reply);
+    return ok;
+}
+
+bool RedisClient::ZIncrBy(const std::string& key, double increment,
+                          const std::string& member, double& newScore) {
+    if (!EnsureConnected()) return false;
+    redisReply* reply = (redisReply*)redisCommand(context_, "ZINCRBY %s %f %s", key.c_str(), increment, member.c_str());
+    if (!reply) {
+        std::cerr << "Redis ZINCRBY command failed" << std::endl;
+        return false;
+    }
+    bool ok = false;
+    if (reply->type == REDIS_REPLY_STRING) {
+        newScore = atof(reply->str);
+        ok = true;
+    }
+    freeReplyObject(reply);
+    return ok;
+}
+
+bool RedisClient::ZRevRangeWithScores(const std::string& key, int start, int stop,
+                                      std::vector<std::pair<std::string, double>>& out) {
+    if (!EnsureConnected()) return false;
+    redisReply* reply = (redisReply*)redisCommand(context_, "ZREVRANGE %s %d %d WITHSCORES",
+                                                  key.c_str(), start, stop);
+    if (!reply) {
+        std::cerr << "Redis ZREVRANGE command failed" << std::endl;
+        return false;
+    }
+    bool ok = false;
+    if (reply->type == REDIS_REPLY_ARRAY) {
+        out.clear();
+        for (size_t i = 0; i + 1 < reply->elements; i += 2) {
+            std::string member(reply->element[i]->str, reply->element[i]->len);
+            double score = atof(reply->element[i + 1]->str);
+            out.emplace_back(member, score);
+        }
+        ok = true;
+    }
     freeReplyObject(reply);
     return ok;
 }
