@@ -2,6 +2,7 @@
 
 #include <map>
 #include <string>
+#include <nlohmann/json.hpp>
 
 class HttpRequest {
 public:
@@ -26,17 +27,23 @@ public:
     Version version() const { return version_; }
 
     bool setMethod(const char* start, const char* end);
-    Method method() const { return method_; }
+    // Convenience accessors for routing
+    std::string method() const { return methodString(); }
     const char* methodString() const;
-
-    void setPath(const char* start, const char* end) { path_.assign(start, end); }
     const std::string& path() const { return path_; }
+
+    Method methodEnum() const { return method_; }
+    void setPath(const char* start, const char* end) { path_.assign(start, end); }
 
     void setQuery(const char* start, const char* end) { query_.assign(start, end); }
     const std::string& query() const { return query_; }
 
     void addHeader(const char* start, const char* colon, const char* end);
     std::string getHeader(const std::string& field) const;
+
+    void setBody(const std::string& body);
+    const std::string& body() const { return body_; }
+    const nlohmann::json& getJson() const { return json_; }
 
     const std::map<std::string, std::string>& headers() const { return headers_; }
 
@@ -48,4 +55,6 @@ private:
     std::string path_;
     std::string query_;
     std::map<std::string, std::string> headers_;
+    std::string body_;
+    nlohmann::json json_;
 };
