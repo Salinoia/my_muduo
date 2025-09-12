@@ -62,86 +62,84 @@ void ConfigManager::WatchLoop(int intervalMs) {
     }
 }
 
+namespace {
+nlohmann::json YamlToJson(const YAML::Node& node) {
+    if (node.IsScalar()) {
+        const std::string s = node.as<std::string>();
+        if (s == "true" || s == "false") return node.as<bool>();
+        try {
+            if (s.find('.') != std::string::npos) return std::stod(s);
+            return std::stoll(s);
+        } catch (...) {
+            return s;
+        }
+    } else if (node.IsSequence()) {
+        nlohmann::json arr = nlohmann::json::array();
+        for (const auto& it : node) arr.push_back(YamlToJson(it));
+        return arr;
+    } else if (node.IsMap()) {
+        nlohmann::json obj = nlohmann::json::object();
+        for (const auto& it : node) obj[it.first.as<std::string>()] = YamlToJson(it.second);
+        return obj;
+    }
+    return {};
+}
+
+nlohmann::json::json_pointer MakePointer(const std::string& key) {
+    std::string ptr = "/";
+    for (char c : key) ptr += (c == '.' ? '/' : c);
+    return nlohmann::json::json_pointer(ptr);
+}
+}
+
 bool ConfigManager::ParseJson(const std::string& content) {
     std::lock_guard<std::mutex> lock(mutex_);
-    data_.clear();
-    size_t pos = 0;
-    while (true) {
-        size_t keyStart = content.find('"', pos);
-        if (keyStart == std::string::npos) break;
-        size_t keyEnd = content.find('"', keyStart + 1);
-        if (keyEnd == std::string::npos) break;
-        std::string key = content.substr(keyStart + 1, keyEnd - keyStart - 1);
-        size_t colon = content.find(':', keyEnd);
-        if (colon == std::string::npos) break;
-        size_t valueStart = colon + 1;
-        while (valueStart < content.size() && std::isspace(static_cast<unsigned char>(content[valueStart]))) ++valueStart;
-        size_t valueEnd = valueStart;
-        if (valueStart < content.size() && content[valueStart] == '"') {
-            ++valueStart;
-            valueEnd = content.find('"', valueStart);
-            if (valueEnd == std::string::npos) break;
-            std::string value = content.substr(valueStart, valueEnd - valueStart);
-            data_[key] = value;
-            pos = valueEnd + 1;
-        } else {
-            while (valueEnd < content.size() && content[valueEnd] != ',' && content[valueEnd] != '}' && content[valueEnd] != '\n') ++valueEnd;
-            std::string value = content.substr(valueStart, valueEnd - valueStart);
-            data_[key] = Trim(value);
-            pos = valueEnd + 1;
-        }
+    try {
+        root_ = nlohmann::json::parse(content);
+    } catch (...) {
+        return false;
     }
-    return !data_.empty();
+    return !root_.is_null();
 }
 
 bool ConfigManager::ParseYaml(const std::string& content) {
     std::lock_guard<std::mutex> lock(mutex_);
-    data_.clear();
-    std::istringstream iss(content);
-    std::string line;
-    while (std::getline(iss, line)) {
-        auto hash = line.find('#');
-        if (hash != std::string::npos) line = line.substr(0, hash);
-        line = Trim(line);
-        if (line.empty()) continue;
-        auto colon = line.find(':');
-        if (colon == std::string::npos) continue;
-        std::string key = Trim(line.substr(0, colon));
-        std::string value = Trim(line.substr(colon + 1));
-        if (!value.empty() && value.front() == '"' && value.back() == '"') {
-            value = value.substr(1, value.size() - 2);
-        }
-        data_[key] = value;
+    try {
+        YAML::Node node = YAML::Load(content);
+        root_ = YamlToJson(node);
+    } catch (...) {
+        return false;
     }
-    return !data_.empty();
+    return !root_.is_null();
 }
 
 std::string ConfigManager::GetString(const std::string& key, const std::string& defaultValue) const {
     std::lock_guard<std::mutex> lock(mutex_);
-    auto it = data_.find(key);
-    return it != data_.end() ? it->second : defaultValue;
+    auto ptr = MakePointer(key);
+    if (!root_.contains(ptr)) return defaultValue;
+    const auto& v = root_.at(ptr);
+    if (v.is_string()) return v.get<std::string>();
+    return v.dump();
 }
 
 int ConfigManager::GetInt(const std::string& key, int defaultValue) const {
-    try {
-        return std::stoi(GetString(key));
-    } catch (...) {
-        return defaultValue;
-    }
+    std::lock_guard<std::mutex> lock(mutex_);
+    auto ptr = MakePointer(key);
+    if (!root_.contains(ptr)) return defaultValue;
+    try { return root_.at(ptr).get<int>(); } catch (...) { return defaultValue; }
 }
 
 double ConfigManager::GetDouble(const std::string& key, double defaultValue) const {
-    try {
-        return std::stod(GetString(key));
-    } catch (...) {
-        return defaultValue;
-    }
+    std::lock_guard<std::mutex> lock(mutex_);
+    auto ptr = MakePointer(key);
+    if (!root_.contains(ptr)) return defaultValue;
+    try { return root_.at(ptr).get<double>(); } catch (...) { return defaultValue; }
 }
 
 bool ConfigManager::GetBool(const std::string& key, bool defaultValue) const {
-    auto val = GetString(key);
-    if (val == "true" || val == "1") return true;
-    if (val == "false" || val == "0") return false;
-    return defaultValue;
+    std::lock_guard<std::mutex> lock(mutex_);
+    auto ptr = MakePointer(key);
+    if (!root_.contains(ptr)) return defaultValue;
+    try { return root_.at(ptr).get<bool>(); } catch (...) { return defaultValue; }
 }
 
