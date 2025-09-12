@@ -2,10 +2,16 @@
 
 #include "RedisClient.h"
 #include "RedisPool.h"
+#include "ConfigManager.h"
 
 int main() {
-    // Create pool with single connection for demonstration.
-    RedisPool pool("127.0.0.1", 6379, 1);
+    // Load configuration
+    ConfigManager::Instance().Load("config/redis.yaml");
+    std::string host = ConfigManager::Instance().GetString("host", "127.0.0.1");
+    int port = ConfigManager::Instance().GetInt("port", 6379);
+    int poolSize = ConfigManager::Instance().GetInt("poolSize", 1);
+
+    RedisPool pool(host, port, poolSize);
     auto client = pool.GetClient();
     if (!client) {
         std::cerr << "No redis client available" << std::endl;
@@ -19,4 +25,3 @@ int main() {
     client->Del("hello");
     return 0;
 }
-
