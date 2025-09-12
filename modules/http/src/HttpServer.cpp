@@ -43,7 +43,11 @@ void HttpServer::onRequest(const TcpConnectionPtr& conn, HttpRequest& req) {
         close = true;
     }
     HttpResponse response(close);
-    router_.handle(req, response);
+    if (httpCallback_) {
+        httpCallback_(req, response);
+    } else {
+        router_.handle(req, response);
+    }
     Buffer buf;
     response.appendToBuffer(&buf);
     conn->send(buf.retrieveAllAsString());

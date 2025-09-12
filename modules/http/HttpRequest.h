@@ -64,4 +64,5 @@ private:
     std::map<std::string, std::string> headers_;
     std::string body_;
     nlohmann::json json_;
+    std::shared_ptr<Session> session_;
 };

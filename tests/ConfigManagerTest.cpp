@@ -7,7 +7,7 @@
 int main() {
     const std::string filename = "test_config.json";
     std::ofstream ofs(filename);
-    ofs << "{\n  \"port\": \"8080\",\n  \"debug\": \"true\",\n  \"pi\": \"3.14\"\n}";
+    ofs << "{\n  \"port\": 8080,\n  \"debug\": true,\n  \"pi\": 3.14\n}";
     ofs.close();
 
     auto& cm = ConfigManager::Instance();
