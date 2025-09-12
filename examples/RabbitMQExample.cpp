@@ -3,9 +3,14 @@
 #include <thread>
 
 #include "RabbitMQClient.h"
+#include "ConfigManager.h"
 
 int main() {
-    auto client = std::make_shared<RabbitMQClient>("localhost", 5672);
+    ConfigManager::Instance().Load("config/mq.json");
+    std::string host = ConfigManager::Instance().GetString("host", "localhost");
+    int port = ConfigManager::Instance().GetInt("port", 5672);
+
+    auto client = std::make_shared<RabbitMQClient>(host, port);
     client->setErrorCallback([](const std::string& err) { std::cerr << "RabbitMQ error: " << err << std::endl; });
     client->enableReconnect(true);
     client->connect();
