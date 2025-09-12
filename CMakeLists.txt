@@ -6,6 +6,8 @@ project(muduo-core)
 set (CMAKE_CXX_STANDARD 17)
 set (CMAKE_CXX_STANDARD_REQUIRED True)
 
+enable_testing()
+
 #链接必要的库
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 set(LIBS pthread)
@@ -13,5 +15,10 @@ set(LIBS pthread)
 #添加子目录
 add_subdirectory(core)
 add_subdirectory(modules)
-add_subdirectory(examples)
+
+option(BUILD_EXAMPLES "Build examples" OFF)
+if(BUILD_EXAMPLES)
+    add_subdirectory(examples)
+endif()
+
 add_subdirectory(tests)
