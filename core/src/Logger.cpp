@@ -4,6 +4,7 @@
 
 #include <cstdarg>
 #include <ctime>
+#include <filesystem>
 #include <iomanip>
 #include <iostream>
 #include <memory>
@@ -32,7 +33,7 @@ void Logger::setLogLevel(LogLevel level) {
 void Logger::log(LogLevel level, const std::string& msg) {
     if (level < logLevel_)
         return;  // 低于当前日志级别直接忽略
-    std::lock_guard<std::mutex> lock(mutex_);
+
     auto now = std::chrono::system_clock::now();
     std::time_t time = std::chrono::system_clock::to_time_t(now);
     std::tm tm = {};
@@ -60,17 +61,25 @@ void Logger::log(LogLevel level, const std::string& msg) {
         break;
     }
     oss << "] " << msg << std::endl;
+    std::string line = oss.str();
 
-    // 输出日志
-    if (consoleOutput_) {
-        std::cout << oss.str();
-    }
-    if (fileOutput_) {
-        *fileOutput_ << oss.str();
-        fileOutput_->flush();  // 立即刷新到文件
+    if (async_) {
+        while (!queue_.Push(line)) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        }
+    } else {
+        std::lock_guard<std::mutex> lock(mutex_);
+        rollFileIfNeeded(tm);
+        if (consoleOutput_) {
+            std::cout << line;
+        }
+        if (fileOutput_) {
+            *fileOutput_ << line;
+            fileSize_ += line.size();
+            fileOutput_->flush();
+        }
     }
 
-    // FATAL 日志终止程序
     if (level == FATAL) {
         std::abort();
     }
@@ -83,12 +92,13 @@ void Logger::setOutputToConsole(bool enable) {
 
 void Logger::setOutputToFile(const std::string& filename) {
     std::lock_guard<std::mutex> lock(mutex_);
-    fileOutput_ = std::make_unique<std::ofstream>(filename, std::ios::app);  // make_unique 是 C++14 的特性
-    // fileOutput_.reset(new std::ofstream(filename, std::ios::app));
-    if (!fileOutput_->good()) {
-        fileOutput_.reset();
-        throw std::runtime_error("Failed to open log file");
-    }
+    baseFilename_ = filename;
+    fileIndex_ = 0;
+    auto now = std::chrono::system_clock::now();
+    std::time_t time = std::chrono::system_clock::to_time_t(now);
+    std::tm tm = {};
+    localtime_r(&time, &tm);
+    openLogFile(tm);
 }
 
 Logger::Logger() {
@@ -96,8 +106,75 @@ Logger::Logger() {
 }
 
 Logger::~Logger() {
+    if (async_) {
+        running_.store(false);
+        if (worker_.joinable()) {
+            worker_.join();
+        }
+    }
     if (fileOutput_) {
         fileOutput_->close();
+    }
+}
+
+void Logger::enableAsync(bool enable) {
+    if (enable && !async_) {
+        async_ = true;
+        running_.store(true);
+        worker_ = std::thread([this]() { asyncWriteLoop(); });
+    }
+}
+
+void Logger::asyncWriteLoop() {
+    std::string line;
+    while (running_.load() || queue_.Size() > 0) {
+        if (queue_.Pop(line)) {
+            auto now = std::chrono::system_clock::now();
+            std::time_t time = std::chrono::system_clock::to_time_t(now);
+            std::tm tm = {};
+            localtime_r(&time, &tm);
+            std::lock_guard<std::mutex> lock(mutex_);
+            rollFileIfNeeded(tm);
+            if (consoleOutput_) {
+                std::cout << line;
+            }
+            if (fileOutput_) {
+                *fileOutput_ << line;
+                fileSize_ += line.size();
+                fileOutput_->flush();
+            }
+        } else {
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        }
+    }
+}
+
+void Logger::openLogFile(const std::tm& tm) {
+    if (baseFilename_.empty()) return;
+
+    std::filesystem::path path(baseFilename_);
+    std::filesystem::create_directories(path.parent_path());
+
+    std::string stem = path.stem().string();
+    std::string ext = path.extension().string();
+    std::ostringstream oss;
+    oss << stem << '_' << std::put_time(&tm, "%Y%m%d") << '_' << std::setw(3) << std::setfill('0') << fileIndex_++ << ext;
+    std::filesystem::path newPath = path.parent_path() / oss.str();
+
+    fileOutput_ = std::make_unique<std::ofstream>(newPath.string(), std::ios::app);
+    if (!fileOutput_->good()) {
+        fileOutput_.reset();
+        throw std::runtime_error("Failed to open log file");
+    }
+    fileSize_ = fileOutput_->tellp();
+    currentDate_ = tm;
+}
+
+void Logger::rollFileIfNeeded(const std::tm& tm) {
+    if (!fileOutput_) return;
+    if (tm.tm_year != currentDate_.tm_year || tm.tm_mon != currentDate_.tm_mon || tm.tm_mday != currentDate_.tm_mday || fileSize_ >= rollSize_) {
+        fileOutput_->close();
+        openLogFile(tm);
     }
 }
 // 安全的格式化函数（替代 snprintf）
