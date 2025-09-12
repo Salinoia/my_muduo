@@ -13,6 +13,7 @@ void HttpContext::reset() {
     state_ = kExpectRequestLine;
     HttpRequest dummy;
     request_.swap(dummy);
+    contentLength_ = 0;
 }
 
 bool HttpContext::processRequestLine(const char* begin, const char* end) {
@@ -74,16 +75,26 @@ bool HttpContext::parseRequest(Buffer* buf, TimeStamp /*receiveTime*/) {
                 if (colon != crlf) {
                     request_.addHeader(start, colon, crlf);
                 } else {
-                    state_ = kGotAll;
-                    hasMore = false;
+                    std::string len = request_.getHeader("Content-Length");
+                    if (!len.empty()) {
+                        contentLength_ = static_cast<size_t>(std::stoi(len));
+                        state_ = kExpectBody;
+                    } else {
+                        state_ = kGotAll;
+                        hasMore = false;
+                    }
                 }
                 buf->retrieve(crlf + 2 - start);
             } else {
                 hasMore = false;
             }
         } else if (state_ == kExpectBody) {
-            // not implemented
-            state_ = kGotAll;
+            if (buf->readableBytes() >= contentLength_) {
+                std::string body(buf->peek(), buf->peek() + contentLength_);
+                buf->retrieve(contentLength_);
+                request_.setBody(body);
+                state_ = kGotAll;
+            }
             hasMore = false;
         } else {
             hasMore = false;

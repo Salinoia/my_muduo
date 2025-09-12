@@ -2,6 +2,7 @@
 
 #include <map>
 #include <string>
+#include <nlohmann/json.hpp>
 
 class Buffer;
 
@@ -27,6 +28,7 @@ public:
     void addHeader(const std::string& key, const std::string& value) { headers_[key] = value; }
 
     void setBody(const std::string& body) { body_ = body; }
+    void setJson(const nlohmann::json& j);
 
     void appendToBuffer(Buffer* output) const;
 

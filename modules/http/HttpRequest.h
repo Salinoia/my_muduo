@@ -2,6 +2,7 @@
 
 #include <map>
 #include <string>
+#include <nlohmann/json.hpp>
 
 class HttpRequest {
 public:
@@ -38,6 +39,10 @@ public:
     void addHeader(const char* start, const char* colon, const char* end);
     std::string getHeader(const std::string& field) const;
 
+    void setBody(const std::string& body);
+    const std::string& body() const { return body_; }
+    const nlohmann::json& getJson() const { return json_; }
+
     const std::map<std::string, std::string>& headers() const { return headers_; }
 
     void swap(HttpRequest& that);
@@ -48,4 +53,6 @@ private:
     std::string path_;
     std::string query_;
     std::map<std::string, std::string> headers_;
+    std::string body_;
+    nlohmann::json json_;
 };

@@ -7,6 +7,11 @@
 
 HttpResponse::HttpResponse(bool close) : statusCode_(kUnknown), closeConnection_(close) {}
 
+void HttpResponse::setJson(const nlohmann::json& j) {
+    setContentType("application/json");
+    body_ = j.dump();
+}
+
 void HttpResponse::appendToBuffer(Buffer* output) const {
     char buf[64];
     snprintf(buf, sizeof buf, "HTTP/1.1 %d ", statusCode_);
