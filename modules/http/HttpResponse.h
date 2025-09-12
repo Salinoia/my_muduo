@@ -11,6 +11,8 @@ public:
         kUnknown,
         k200Ok = 200,
         k301MovedPermanently = 301,
+        k401Unauthorized = 401,
+        k403Forbidden = 403,
         k400BadRequest = 400,
         k404NotFound = 404,
     };
@@ -19,6 +21,7 @@ public:
 
     void setStatusCode(HttpStatusCode code) { statusCode_ = code; }
     void setStatusMessage(const std::string& message) { statusMessage_ = message; }
+    HttpStatusCode statusCode() const { return statusCode_; }
 
     void setCloseConnection(bool on) { closeConnection_ = on; }
     bool closeConnection() const { return closeConnection_; }
