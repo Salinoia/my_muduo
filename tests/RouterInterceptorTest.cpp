@@ -35,7 +35,7 @@ void TestOrder() {
     std::vector<std::string> log;
     router.addInterceptor(std::make_shared<RecordingInterceptor>("A", log));
     router.addInterceptor(std::make_shared<RecordingInterceptor>("B", log));
-    router.addRoute("/test", [&](HttpRequest& req, HttpResponse& res) {
+    router.addRoute("GET", "/test", [&](HttpRequest& req, HttpResponse& res) {
         log.push_back("handler");
         res.setStatusCode(HttpResponse::k200Ok);
     });
@@ -43,6 +43,8 @@ void TestOrder() {
     HttpRequest req;
     const char* path = "/test";
     req.setPath(path, path + 5);
+    const char* m = "GET";
+    req.setMethod(m, m + 3);
     HttpResponse res(false);
     router.handle(req, res);
 
@@ -55,7 +57,7 @@ void TestShortCircuit() {
     router.addInterceptor(std::make_shared<RecordingInterceptor>("A", log));
     router.addInterceptor(std::make_shared<StopInterceptor>(log));
     router.addInterceptor(std::make_shared<RecordingInterceptor>("B", log));
-    router.addRoute("/test", [&](HttpRequest& req, HttpResponse& res) {
+    router.addRoute("GET", "/test", [&](HttpRequest& req, HttpResponse& res) {
         log.push_back("handler");
         res.setStatusCode(HttpResponse::k200Ok);
     });
@@ -63,6 +65,8 @@ void TestShortCircuit() {
     HttpRequest req;
     const char* path = "/test";
     req.setPath(path, path + 5);
+    const char* m = "GET";
+    req.setMethod(m, m + 3);
     HttpResponse res(false);
     router.handle(req, res);
 

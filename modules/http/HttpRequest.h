@@ -27,11 +27,13 @@ public:
     Version version() const { return version_; }
 
     bool setMethod(const char* start, const char* end);
-    Method method() const { return method_; }
+    // Convenience accessors for routing
+    std::string method() const { return methodString(); }
     const char* methodString() const;
-
-    void setPath(const char* start, const char* end) { path_.assign(start, end); }
     const std::string& path() const { return path_; }
+
+    Method methodEnum() const { return method_; }
+    void setPath(const char* start, const char* end) { path_.assign(start, end); }
 
     void setQuery(const char* start, const char* end) { query_.assign(start, end); }
     const std::string& query() const { return query_; }

@@ -1,4 +1,5 @@
 #pragma once
+#include <atomic>
 #include <fstream>
 #include <memory>
 #include <mutex>
@@ -6,6 +7,7 @@
 #include <thread>
 
 #include "NonCopyable.h"
+#include "SpscRingBuffer.h"
 
 // 定义日志级别
 enum LogLevel {
@@ -28,6 +30,11 @@ public:
     void setOutputToConsole(bool enable);
     void setOutputToFile(const std::string& filename);
 
+    // enable asynchronous logging; call once before logging
+    void enableAsync(bool enable = true);
+    // set log rolling size in bytes
+    void setRollSize(size_t bytes) { rollSize_ = bytes; }
+
 private:
     Logger();  // 私有构造函数（单例模式）
     ~Logger();
@@ -38,6 +45,23 @@ private:
     // 输出目标
     bool consoleOutput_ = true;
     std::unique_ptr<std::ofstream> fileOutput_;
+
+    // asynchronous logging
+    bool async_ = false;
+    std::atomic<bool> running_{false};
+    std::thread worker_;
+    LockFreeQueue<std::string, 4096> queue_;
+
+    // file rolling
+    size_t rollSize_ = 10 * 1024 * 1024;  // 10 MB default
+    size_t fileSize_ = 0;
+    int fileIndex_ = 0;
+    std::string baseFilename_;
+    std::tm currentDate_{};
+
+    void asyncWriteLoop();
+    void rollFileIfNeeded(const std::tm& tm);
+    void openLogFile(const std::tm& tm);
 };
 
 // 日志宏（自动附加日志级别、线程安全）
