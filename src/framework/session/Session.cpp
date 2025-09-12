@@ -6,6 +6,16 @@ Session::Session(const std::string& id, std::shared_ptr<SessionStore> store, int
     data_ = store_->get(id_);
 }
 
+thread_local std::shared_ptr<Session> Session::tlsSession_{};
+
+void Session::SetCurrent(std::shared_ptr<Session> session) {
+    tlsSession_ = std::move(session);
+}
+
+std::shared_ptr<Session> Session::Current() {
+    return tlsSession_;
+}
+
 std::string Session::get(const std::string& key) const {
     auto it = data_.find(key);
     if (it != data_.end()) {
@@ -77,8 +87,10 @@ void SessionInterceptor::Handle(HttpRequest& req, HttpResponse& res, Next next) 
         id = generateId();
     }
     auto session = std::make_shared<Session>(id, store_, ttlSeconds_);
+    Session::SetCurrent(session);
     req.setSession(session);
     next();
     session->save();
     res.addHeader("Set-Cookie", "SESSIONID=" + session->id() + "; Path=/; HttpOnly");
+    Session::SetCurrent(nullptr);
 }
