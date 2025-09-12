@@ -16,8 +16,8 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 set(LIBS pthread)
 
 #添加子目录
-add_subdirectory(core)
-add_subdirectory(modules)
+add_subdirectory(src/core)
+add_subdirectory(src/modules)
 
 option(BUILD_EXAMPLES "Build examples" OFF)
 if(BUILD_EXAMPLES)
