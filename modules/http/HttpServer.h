@@ -10,7 +10,7 @@
 
 class HttpServer {
 public:
-    using HttpCallback = std::function<void(const HttpRequest&, HttpResponse*)>;
+    using HttpCallback = std::function<void(HttpRequest&, HttpResponse&)>;
 
     HttpServer(EventLoop* loop, const InetAddress& listenAddr, const std::string& name, TcpServer::Option option = TcpServer::kNoReusePort);
 
@@ -22,7 +22,7 @@ public:
 private:
     void onConnection(const TcpConnectionPtr& conn);
     void onMessage(const TcpConnectionPtr& conn, Buffer* buf, TimeStamp receiveTime);
-    void onRequest(const TcpConnectionPtr& conn, const HttpRequest& req);
+    void onRequest(const TcpConnectionPtr& conn, HttpRequest& req);
 
     TcpServer server_;
     HttpCallback httpCallback_;
