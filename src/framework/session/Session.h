@@ -24,12 +24,20 @@ public:
     void set(const std::string& key, const std::string& value);
     void save();
 
+    // Thread-local accessors for the current session. These helpers allow
+    // business code to fetch user information without passing the Session
+    // object explicitly through every layer.
+    static void SetCurrent(std::shared_ptr<Session> session);
+    static std::shared_ptr<Session> Current();
+
 private:
     std::string id_;
     std::unordered_map<std::string, std::string> data_;
     std::shared_ptr<SessionStore> store_;
     int ttlSeconds_;
     bool dirty_;
+
+    static thread_local std::shared_ptr<Session> tlsSession_;
 };
 
 class MemorySessionStore : public SessionStore {

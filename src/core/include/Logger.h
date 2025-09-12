@@ -35,6 +35,10 @@ public:
     // set log rolling size in bytes
     void setRollSize(size_t bytes) { rollSize_ = bytes; }
 
+    // Attach a trace identifier to subsequent log lines on the current thread.
+    void setTraceId(const std::string& id);
+    void clearTraceId();
+
 private:
     Logger();  // 私有构造函数（单例模式）
     ~Logger();
@@ -62,6 +66,8 @@ private:
     void asyncWriteLoop();
     void rollFileIfNeeded(const std::tm& tm);
     void openLogFile(const std::tm& tm);
+
+    static thread_local std::string traceId_;
 };
 
 // 日志宏（自动附加日志级别、线程安全）

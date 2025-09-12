@@ -17,6 +17,8 @@ const char* levelToString(LogLevel level) {
     return strings[level];
 }
 }  // namespace
+
+thread_local std::string Logger::traceId_{};
 Logger& Logger::instance() {
     if (tlsLogger == nullptr) {
         static Logger gloLogger;  // 全局唯一单例
@@ -60,7 +62,11 @@ void Logger::log(LogLevel level, const std::string& msg) {
         oss << "FATAL";
         break;
     }
-    oss << "] " << msg << std::endl;
+    std::string finalMsg = msg;
+    if (!traceId_.empty()) {
+        finalMsg = "[TraceId:" + traceId_ + "] " + msg;
+    }
+    oss << "] " << finalMsg << std::endl;
     std::string line = oss.str();
 
     if (async_) {
@@ -84,6 +90,10 @@ void Logger::log(LogLevel level, const std::string& msg) {
         std::abort();
     }
 }
+
+void Logger::setTraceId(const std::string& id) { traceId_ = id; }
+
+void Logger::clearTraceId() { traceId_.clear(); }
 
 void Logger::setOutputToConsole(bool enable) {
     std::lock_guard<std::mutex> lock(mutex_);
