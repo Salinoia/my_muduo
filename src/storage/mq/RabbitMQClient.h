@@ -8,6 +8,7 @@
 #include <queue>
 #include <string>
 #include <thread>
+#include <vector>
 #include <nlohmann/json.hpp>
 
 // A lightweight RabbitMQ client simulation providing basic
@@ -31,7 +32,7 @@ public:
     using MessageCallback = std::function<void(const std::string&)>;
 
     RabbitMQClient(const std::string& host = "localhost", int port = 5672);
-    ~RabbitMQClient() = default;
+    ~RabbitMQClient();
 
     static std::shared_ptr<RabbitMQClient> Instance();
 
@@ -63,6 +64,7 @@ private:
     std::map<std::string, std::queue<std::string>> queues_;
     std::mutex mutex_;
     std::condition_variable cond_;
+    std::vector<std::thread> consumerThreads_;
 };
 
 // Simple helper for publishing messages.

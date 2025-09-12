@@ -7,6 +7,8 @@
 RabbitMQClient::RabbitMQClient(const std::string& host, int port)
     : host_(host), port_(port), connected_(false), reconnect_(true) {}
 
+RabbitMQClient::~RabbitMQClient() { disconnect(); }
+
 std::shared_ptr<RabbitMQClient> RabbitMQClient::Instance() {
     static std::shared_ptr<RabbitMQClient> instance;
     static std::once_flag flag;
@@ -25,7 +27,15 @@ bool RabbitMQClient::connect() {
 }
 
 void RabbitMQClient::disconnect() {
+    if (!connected_)
+        return;
     connected_ = false;
+    cond_.notify_all();
+    for (auto& t : consumerThreads_) {
+        if (t.joinable())
+            t.join();
+    }
+    consumerThreads_.clear();
 }
 
 bool RabbitMQClient::isConnected() const {
@@ -65,7 +75,7 @@ bool RabbitMQClient::publish(const std::string& queue, const std::string& messag
 }
 
 void RabbitMQClient::consume(const std::string& queue, MessageCallback cb) {
-    std::thread([this, queue, cb]() {
+    consumerThreads_.emplace_back([this, queue, cb]() {
         while (true) {
             std::unique_lock<std::mutex> lock(mutex_);
             cond_.wait(lock, [this, &queue]() { return !queues_[queue].empty() || !connected_; });
@@ -76,7 +86,7 @@ void RabbitMQClient::consume(const std::string& queue, MessageCallback cb) {
             lock.unlock();
             cb(msg);
         }
-    }).detach();
+    });
 }
 
 Producer::Producer(const std::shared_ptr<RabbitMQClient>& client) : client_(client) {}
