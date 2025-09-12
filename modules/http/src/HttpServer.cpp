@@ -37,14 +37,14 @@ void HttpServer::onMessage(const TcpConnectionPtr& conn, Buffer* buf, TimeStamp 
     }
 }
 
-void HttpServer::onRequest(const TcpConnectionPtr& conn, const HttpRequest& req) {
+void HttpServer::onRequest(const TcpConnectionPtr& conn, HttpRequest& req) {
     bool close = false;
     if (req.getHeader("Connection") == "close" || (req.version() == HttpRequest::kHttp10 && req.getHeader("Connection") != "Keep-Alive")) {
         close = true;
     }
     HttpResponse response(close);
     if (httpCallback_) {
-        httpCallback_(req, &response);
+        httpCallback_(req, response);
     } else {
         response.setStatusCode(HttpResponse::k404NotFound);
         response.setStatusMessage("Not Found");
