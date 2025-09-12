@@ -43,6 +43,11 @@ add_executable(http_json_test HttpJsonTest.cpp)
 target_include_directories(http_json_test PRIVATE ${CMAKE_SOURCE_DIR}/modules)
 target_link_libraries(http_json_test muduo_http)
 
+add_executable(session_test SessionTest.cpp ../framework/session/Session.cpp)
+target_include_directories(session_test PRIVATE ${CMAKE_SOURCE_DIR}/framework ${CMAKE_SOURCE_DIR}/modules)
+target_link_libraries(session_test muduo_http)
+
 add_executable(config_reload_test ConfigReloadTest.cpp ../framework/utils/ConfigManager.cpp)
 target_include_directories(config_reload_test PRIVATE ${CMAKE_SOURCE_DIR}/framework/utils)
 target_link_libraries(config_reload_test yaml-cpp)
+

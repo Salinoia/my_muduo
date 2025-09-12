@@ -23,6 +23,11 @@ target_link_libraries(config_hot_reload yaml-cpp)
 
 target_link_libraries(redis_example hiredis muduo_core ${LIBS})
 
+
+add_executable(session_example SessionExample.cpp ../framework/session/Session.cpp)
+target_include_directories(session_example PRIVATE ${CMAKE_SOURCE_DIR}/framework ${CMAKE_SOURCE_DIR}/modules)
+target_link_libraries(session_example muduo_http)
+
 add_executable(web_server WebServer.cpp)
 target_include_directories(web_server PRIVATE ${CMAKE_SOURCE_DIR}/core/include ${CMAKE_SOURCE_DIR}/modules ${CMAKE_SOURCE_DIR}/framework ${CMAKE_SOURCE_DIR}/services)
 target_link_libraries(web_server muduo_http muduo_core ${LIBS})
@@ -34,4 +39,5 @@ target_link_libraries(logger_stress muduo_core ${LIBS})
 add_executable(router_example RouterExample.cpp)
 target_include_directories(router_example PRIVATE ${CMAKE_SOURCE_DIR}/framework ${CMAKE_SOURCE_DIR}/modules)
 target_link_libraries(router_example muduo_http)
+
 

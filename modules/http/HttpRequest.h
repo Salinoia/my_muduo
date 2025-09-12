@@ -1,8 +1,11 @@
 #pragma once
 
 #include <map>
+#include <memory>
 #include <string>
 #include <nlohmann/json.hpp>
+
+class Session;  // forward declaration
 
 class HttpRequest {
 public:
@@ -46,6 +49,10 @@ public:
     const nlohmann::json& getJson() const { return json_; }
 
     const std::map<std::string, std::string>& headers() const { return headers_; }
+    void setHeader(const std::string& field, const std::string& value) { headers_[field] = value; }
+
+    void setSession(const std::shared_ptr<Session>& session) { session_ = session; }
+    std::shared_ptr<Session> getSession() const { return session_; }
 
     void swap(HttpRequest& that);
 
