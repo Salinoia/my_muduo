@@ -17,7 +17,7 @@ public:
             res.setBody(body);
         });
 
-        router.addRoute("/comment/create", [service, this](HttpRequest& req, HttpResponse& res) {
+        router.addRoute("POST", "/comment/create", [service, this](HttpRequest& req, HttpResponse& res) {
             auto params = parseQuery(req.query());
             auto it = params.find("text");
             if (it != params.end()) {
@@ -48,7 +48,7 @@ public:
             }
         });
 
-        router.addRoute("/comment/update", [service, this](HttpRequest& req, HttpResponse& res) {
+        router.addRoute("POST", "/comment/update", [service, this](HttpRequest& req, HttpResponse& res) {
             auto params = parseQuery(req.query());
             auto itId = params.find("id");
             auto itText = params.find("text");
@@ -66,7 +66,7 @@ public:
             }
         });
 
-        router.addRoute("/comment/delete", [service, this](HttpRequest& req, HttpResponse& res) {
+        router.addRoute("POST", "/comment/delete", [service, this](HttpRequest& req, HttpResponse& res) {
             auto params = parseQuery(req.query());
             auto it = params.find("id");
             if (it != params.end()) {

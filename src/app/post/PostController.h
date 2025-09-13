@@ -17,7 +17,7 @@ public:
             res.setBody(body);
         });
 
-        router.addRoute("/post/create", [service, this](HttpRequest& req, HttpResponse& res) {
+        router.addRoute("POST", "/post/create", [service, this](HttpRequest& req, HttpResponse& res) {
             auto params = parseQuery(req.query());
             auto itTitle = params.find("title");
             auto itContent = params.find("content");
@@ -49,7 +49,7 @@ public:
             }
         });
 
-        router.addRoute("/post/update", [service, this](HttpRequest& req, HttpResponse& res) {
+        router.addRoute("POST", "/post/update", [service, this](HttpRequest& req, HttpResponse& res) {
             auto params = parseQuery(req.query());
             auto itId = params.find("id");
             auto itTitle = params.find("title");
@@ -68,7 +68,7 @@ public:
             }
         });
 
-        router.addRoute("/post/delete", [service, this](HttpRequest& req, HttpResponse& res) {
+        router.addRoute("POST", "/post/delete", [service, this](HttpRequest& req, HttpResponse& res) {
             auto params = parseQuery(req.query());
             auto it = params.find("id");
             if (it != params.end()) {

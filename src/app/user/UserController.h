@@ -17,7 +17,7 @@ public:
             res.setBody(body);
         });
 
-        router.addRoute("/user/create", [service, this](HttpRequest& req, HttpResponse& res) {
+        router.addRoute("POST", "/user/create", [service, this](HttpRequest& req, HttpResponse& res) {
             auto params = parseQuery(req.query());
             auto it = params.find("name");
             if (it != params.end()) {
@@ -48,7 +48,7 @@ public:
             }
         });
 
-        router.addRoute("/user/update", [service, this](HttpRequest& req, HttpResponse& res) {
+        router.addRoute("POST", "/user/update", [service, this](HttpRequest& req, HttpResponse& res) {
             auto params = parseQuery(req.query());
             auto itId = params.find("id");
             auto itName = params.find("name");
@@ -66,7 +66,7 @@ public:
             }
         });
 
-        router.addRoute("/user/delete", [service, this](HttpRequest& req, HttpResponse& res) {
+        router.addRoute("POST", "/user/delete", [service, this](HttpRequest& req, HttpResponse& res) {
             auto params = parseQuery(req.query());
             auto it = params.find("id");
             if (it != params.end()) {
