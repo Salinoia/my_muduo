@@ -54,6 +54,10 @@ public:
         routes_.push_back(std::move(r));
     }
 
+    void addRoute(const std::string& path, const Handler& handler) {
+        addRoute("GET", path, handler);
+    }
+
     void addInterceptor(const std::shared_ptr<Interceptor>& interceptor) {
         chain_.addInterceptor(interceptor);
     }
